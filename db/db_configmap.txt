@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-cm
+data:
+  DBURL: 'db-master-stateful-0.db-stateful-headless:3306'	# 연결할 DB stateful 주소
+  DB: 'project'					# 연결할 DB 이름
+  DBUSER: 'master'					# 사용할 user

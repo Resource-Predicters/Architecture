@@ -1,0 +1,28 @@
+#Labels로 blue 와 green을 구분한다
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: was-replica-a
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      type: was
+      label: blue
+  template:
+    metadata: 
+      name: was-a
+      labels:
+        type: was
+        label: blue
+    spec:
+      containers:
+      - name: container
+        image: ljj9730/spring:latest
+        envFrom:
+          - configMapRef:		# 연결할 DB configmap
+              name: db-cm
+          - secretRef:			# 연결할 DB Password
+              name: db-secret
+terminationGracePeriodSeconds: 0

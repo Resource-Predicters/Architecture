@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+    stages {
+        stage('git'){
+            steps {
+                git branch: 'main',
+                credentialsId: 'Joongit',
+                url: 'https://github.com/Resource-Predicters/Front_End.git'
+            }
+        }
+        stage('docker') {
+            steps {    
+
+            		sh """
+            		docker build --tag ${DOCKER_NAME}/react ./ResourceFront/react-dockerizing	# docker build
+            		docker login -u ${DOCKER_ID} -p ${DOCKER_PASSWORD}			# docker login
+            		docker push ${DOCKER_NAME}/react      				# docker push
+            		"""
+                }
+            }
+        stage('k8s ssh') {
+            steps {    
+                sshagent (credentials: ['k8s']) {
+                    script {
+                        if (env.BUILD_ID.toInteger() % 2 == 0) 			#  build id가 짝수일 경우 a를 2개 생성후 b를 0개로 조정
+                        { 
+                             sh """
+                                ssh -o StrictHostKeyChecking=no ${TARGET_HOST} 	# 연결할 master ip
+                                kubectl scale replicaset web-replica-a --replicas=2 -n project
+                                kubectl scale replicaset web-replica-b --replicas=0 -n project
+                            """
+                            
+                        } 
+                        else  						#  build id가 짝수일 경우 a를 2개 생성후 b를 0개로 조정
+                        {
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${TARGET_HOST} 	# 연결할 master ip
+                                kubectl scale replicaset web-replica-a --replicas=0 -n project
+                                kubectl scale replicaset web-replica-b --replicas=2 -n project
+                            """
+                        }                       
+                    }
+                }
+            }
+        }
+    }
+    environment {
+        TARGET_HOST = "TARGET_HOST "
+        DOCKER_NAME = "DOCKER_NAME "
+        DOCKER_ID = "DOCKER_ID "
+        DOCKER_PASSWORD = "DOCKER_PASSWORD"
+    }
+        
+}

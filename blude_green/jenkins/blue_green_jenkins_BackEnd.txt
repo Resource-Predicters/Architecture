@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+    stages {
+        stage('git'){
+            steps {
+                git branch: 'main',						# 가져올 branch 지정
+                credentialsId: 'git_credentials', 				# private 깃 연결을 위한 credentials
+                url: 'https://github.com/repository.git'				# clone 할 git repository
+            }
+        }
+        stage('docker') {
+            steps {    
+		sh """
+            		chmod +x /var/lib/jenkins/workspace/piptest/gradlew	# bootJar 사용을 위한 권한 변경
+            		/var/lib/jenkins/workspace/piptest/gradlew bootJar		# bootJar 실행
+            		docker build --tag ${DOCKER_NAME}/spring .		# docker build
+            		docker login -u ${DOCKER_ID} -p ${DOCKER_PASSWORD}	# docker login
+            		docker push ${DOCKER_NAME}/spring 			# docker push
+		"""             
+                }
+            }
+        stage('ssh k8s') {
+            steps {    
+                sshagent (credentials: ['k8s']) {
+                    script {
+                        if (env.BUILD_ID.toInteger() % 2 == 0) 			#  build id가 짝수일 경우 a를 2개 생성후 b를 0개로 조정
+                        { 
+                             sh """
+                                ssh -o StrictHostKeyChecking=no ${TARGET_HOST} 	# 연결할 master ip
+                                kubectl scale replicaset was-replica-a --replicas=2 -n project
+                                kubectl scale replicaset was-replica-b --replicas=0 -n project
+                            """
+                            
+                        } 
+                        else 						#  build id가 홀수일 경우 b를 2개 생성후 a를 0개로 조정
+                        {
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${TARGET_HOST} 	# 연결할 master ip
+                                kubectl scale replicaset was-replica-a --replicas=0 -n project
+                                kubectl scale replicaset was-replica-b --replicas=2 -n project
+                            """
+                        }                       
+                    }
+                }
+            }
+        }
+    }
+    environment {
+        TARGET_HOST = "TARGET_HOST "
+        DOCKER_NAME = "DOCKER_NAME "
+        DOCKER_ID = "DOCKER_ID "
+        DOCKER_PASSWORD = "DOCKER_PASSWORD"
+    }
+        
+}

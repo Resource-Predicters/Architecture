@@ -1,0 +1,26 @@
+#Labels로 blue 와 green을 구분한다
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: web-replica-b
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      type: web
+      label: green
+  template:
+    metadata: 
+      name: web-b
+      labels:
+        type: web
+        label: green
+    spec:
+      containers:
+      - name: container
+        image: ljj9730/react:latest
+        envFrom:
+          - configMapRef:
+              name: web-cm		# 백엔드 연결을 위한 configmap
+terminationGracePeriodSeconds: 0

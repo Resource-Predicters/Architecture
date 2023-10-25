@@ -1,0 +1,11 @@
+apiVersion: v1			#headless service
+kind: Service
+metadata:
+  name: db-stateful-headless
+spec:
+  selector:
+    type: db
+  ports:
+    - port: 3306
+      targetPort: 3306    
+  clusterIP: None
