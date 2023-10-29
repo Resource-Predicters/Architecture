@@ -1,4 +1,4 @@
-<h1 align="center">~~~ 프로젝트 프론트엔드 💻 </h1>
+<h1 align="center">원자재 수집 및 예측 프로젝트 아키텍쳐 💻 </h1>
 
 
 
@@ -13,20 +13,20 @@
 
 
 ## 🤹🏻 기술 스택 선정 이유
-- React : 리액트가 유명하다더라
-- Redux : 상태 관리
-- axios : 비동기통신할라고 한거지 뭐
+- Git hub : git hub의 git hook을 통해 Jenkins에 작업을 지시하기 위해서 사용하였습니다
+- Jenkins : Doker 이미지를 Doker hub에 Push 후 kubernetes에 작업을 지시하는 것을 자동화 하기 위해서 사용하였습니다
+- kubernetes : 프라이빗 클라우드 환경을 만들기 위해서 사용하였습니다
 
 
 ## 📌 프로젝트 목표
 
 ```sh
-리액트를 활용해서 상품과 ~~~~~~~~와 판매량 예측을 실시간으로 모니터링할 수 있는 대시보드를 구현하였습니다! 
-리액트를 활용하면서 복잡한 상태 관리는 리덕스로 ~~~~~~    SPA ~~~~~~ 비동기 통신 ~~~~
+1. git, jenkins를 사용하여 kubernetes에 자동화 배포를 구현하기 입니다
+2. kubernetes를 사용하 프라이빗 클라우드 환경 구현하기 입니다
 ```
 
 
-## 📄 UI/UX 설계도
+## 📄 아키텍쳐 구조도
 
 [[설계도 확인할 수 있는 링크 또는 그림]](www.naver.com)
 
@@ -34,20 +34,22 @@
 
 ## 🔍 Overview
 
-### 1. 사용자 회원 가입 및 로그인 페이지
-
-<center>
-    <img src="./img/pic2.png" />
-</center>
-비동기 통신을 활용해서 백엔드에 어쩌고 어쩌고 JWT 토클을 어디에 저장하고 설명설명
-
+### 1. git hook을 사용한 자동화 배포
+*작업 순서
+1. git hub에 개발한 내용을 dockerfile과 함께 repository push한다
+2. jenkin에서 repository의 파일을 받아온다
+3. dockerfile로 doker 이미지를 만들어 doker hub에 push 한다
+4. kubernetes에 작업을 지시를 한다
+4-1. blue/green 형식으로 배포횟수가 짝수, 홀수인지 확인 후 blue/green 갯수를 조절한다
+예를 들어 짝수일 경우 blue RelicaSet의 최신 버전의 pod를 생성하고 이전 버전인 green RelicaSet의 pod의 수를 0으로 만들어 준다
 <br>
 
-### 2. 대시보드 페이지
-
-<center>
-    <img src="./img/pic1.png" />
-</center>
-어떤 어떤 어떤 걸 실시간으로 확인할 수 있고 제어할 수 있고~~~~
-
+### 2. kubernetes을 사용한 프라이빗 클라우드 만들기
+- WEB, WAS, DB를 3계층 아키텍쳐를 만든다
+- WEB, WAS는 각각2개씩 만들어 LB Service에 연결하여 부하 분산 처리를 한다
+- DB는 2중화 하여 저장 안정성을 높인다
+      - master, slave 설정 파일을 volum 설정한다
+      - 데이터를 저장할 수 있도록 master, slave를 node의 volum 각각 지정한다
 <br>
+
+
